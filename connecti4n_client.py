@@ -10,28 +10,38 @@ import socket
 
 VERSION = '1.0'
 
+MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
+
+#GAME = [['x','x','x','x','x','x','x'],
+        #['x','x','x','x','x','x','x'],
+        #['x','x','x','x','x','x','x'],
+        #['x','x','x','x','x','x','x'],
+        #['x','x','x','x','x','x','x'],
+        #['x','x','x','x','x','x','x']]
+        
+#print(GAME)
 # Send to server
-def c4n_send_msg(codigo, contenido):
+
+
+def c4n_send_msg(codigo, contenido, sock):
     #make sure there is a valid code
-    if (codigo not in  ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']):
+    if (codigo not in  MSG_CODES ):
         return None
+    else:
+        # construct basic message
+        out = 'C4N ' + VERSION + ' ' + codigo
     
-    # construct basic message
+        # append content if there is anything
     
-    out = 'C4N ' + VERSION + ' ' + code
+        if (contenido != None):
+            out += '\n' + str(contenido)
     
-    # append content if there is anything
+        #send all generated headers
     
-    if (content != None):
-        out += ' ' + str(content)
-    
-    #return generated headers
-    
-    return out.encode()
+        sock.sendall(out.encode())
     
 def c4n_get_msg(sock):
     #TODO pass back a string containing the value of out from server
-    
     
     msg = sock.recv(1024)
     
@@ -47,7 +57,15 @@ def main():
     
     sock.connect((HOST, PORT))
     
+    
+    message_to_server = input("Test a message ")
+    
+    c4n_send_msg(MSG_CODES[1], message_to_server, sock)
+    
+    
     message_from_server = c4n_get_msg(sock)
+    
+    
     
     print(message_from_server)
         
