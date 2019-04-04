@@ -20,9 +20,9 @@ MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
         #['x','x','x','x','x','x','x']]
         
 #print(GAME)
+
+
 # Send to server
-
-
 def c4n_send_msg(codigo, contenido, sock):
     #make sure there is a valid code
     if (codigo not in  MSG_CODES ):
@@ -30,14 +30,12 @@ def c4n_send_msg(codigo, contenido, sock):
     else:
         # construct basic message
         out = 'C4N ' + VERSION + ' ' + codigo
-    
-        # append content if there is anything
-    
+        # append content if there is anything on the 
         if (contenido != None):
             out += '\n' + str(contenido)
-    
+            
+        print(out)
         #send all generated headers
-    
         sock.sendall(out.encode())
     
 def c4n_get_msg(sock):
@@ -56,20 +54,20 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     sock.connect((HOST, PORT))
+    try:
+        while True:
+            message_to_server = input("Test a message ")
+            #as is it will pass in the start command
+            c4n_send_msg(MSG_CODES[2], message_to_server, sock)
     
     
-    message_to_server = input("Test a message ")
-    
-    c4n_send_msg(MSG_CODES[1], message_to_server, sock)
-    
-    
-    message_from_server = c4n_get_msg(sock)
+            message_from_server = c4n_get_msg(sock)
     
     
     
-    print(message_from_server)
-        
-        
+            print(message_from_server)
+    except (KeyboardInterrupt):
+        sock.close()
     
     sock.close()
     
