@@ -13,6 +13,15 @@ VERSION = '1.0'
 CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
 
+def board_flatten(board):
+    out = str(len(board)) + ' ' + str(len(board[0]))
+    for row in board:
+        for col in row:
+            out +=  ' ' + str(col)
+
+    return out
+
+
 def c4n_validate(data):
     # Decode the data
     lines = data.decode().split('\n')
@@ -77,8 +86,17 @@ def main():
 
     c4n_validate(conn.recv(1024))
 
-    # Send server full message
-    conn.sendall(c4n_message('ERROR', 3))
+    # Create game board
+    board = [[ 0, 0, 0, 0, 0, 0, 0 ],
+             [ 0, 0, 0, 0, 0, 0, 0 ],
+             [ 0, 0, 0, 0, 0, 0, 0 ],
+             [ 0, 0, 0, 0, 0, 0, 0 ],
+             [ 0, 0, 0, 0, 0, 0, 0 ],
+             [ 0, 0, 0, 0, 0, 0, 0 ]]
+
+
+    # Send board state
+    conn.sendall(c4n_message('board', board_flatten(board)))
 
     # Close the client connection
     conn.close()
