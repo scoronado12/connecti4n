@@ -50,11 +50,10 @@ def c4n_get_msg(sock):
 def main():
     HOST = 'localhost'
     PORT = 4414
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    sock.connect((HOST, PORT))
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+        sock.connect((HOST, PORT))
         while True:
             message_to_server = input("Test a message ")
             #as is it will pass in the start command
@@ -68,6 +67,9 @@ def main():
             print(message_from_server)
     except (KeyboardInterrupt):
         sock.close()
+    except ConnectionRefusedError:
+        print("The server you are trying to connect to is not found")
+        exit(1)
     
     sock.close()
     
