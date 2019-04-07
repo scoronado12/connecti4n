@@ -14,8 +14,9 @@ MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
 # Send start command to server
 def c4n_send_start(sock):
-    out = 'C4N ' + VERSION +' ' + MSG_CODES[2]
-    sock.sendall(out.encode())
+    out = "C4N " + VERSION + " " + MSG_CODES[2] + '\n'
+    encOut = out.encode()
+    sock.sendall(encOut)
 
 
 # Send to server
@@ -48,14 +49,18 @@ def main():
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((HOST, PORT))
-        start = input("Would you like to start the game?")
+        start = input("Would you like to start the game? ")
         if (start == 'y'):
-            while True:
-                message_to_server = input("Test a message ")
+            c4n_send_start(sock)
+            print(c4n_get_msg(sock))
+            #TODO uncomment below once we get to the part where I can take in the game logic
+            #c4n_send_start(sock)
+            #while True:
+             #   message_to_server = input("Test a message ")
                 #as is it will pass in the start command
                 #c4n_send_msg(MSG_CODES[2], message_to_server, sock)
-                message_from_server = c4n_get_msg(sock)
-                print(message_from_server)
+              #  message_from_server = c4n_get_msg(sock)
+               # print(message_from_server)
         else:
             exit(0)
     except (KeyboardInterrupt):
