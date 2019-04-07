@@ -96,7 +96,7 @@ def main():
 
 
     # Send board state
-    conn.sendall(c4n_message('board', board_flatten(board)))
+    conn.sendall(c4n_message('BOARD', board_flatten(board)))
 
     # Close the client connection
     conn.close()
