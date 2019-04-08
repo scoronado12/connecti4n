@@ -7,10 +7,39 @@
 # received any unauthorized help on this work.
 
 import socket
-
+import sys
 VERSION = '1.0'
 
 MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
+
+def c4n_validate(data):
+    # Decode the data
+    lines = data.decode().split('\n')
+
+    # Extract the header
+    header = lines[0].split()
+    # Validate length
+    if (len(header) != 3 or
+        header[0] != 'C4N' or
+        header[1] != VERSION or
+        header[2] not in MSG_CODES):
+        # TODO fail
+        print('Bad message')
+        return None
+
+    # Read the content if present
+    if len(lines) > 1:
+        content = ''
+        for l in lines[1:]:
+            content += l
+    else:
+        content = None
+
+    # Return results
+    print('Good message!')
+    return header[2], content
+
+
 
 # Send start command to server
 def c4n_send_start(sock):
@@ -34,15 +63,26 @@ def c4n_send_msg(codigo, contenido, sock):
         #send all generated headers
         sock.sendall(out.encode())
 
-def c4n_get_msg(sock):
-    #TODO pass back a string containing the value of out from server
+# Board Data
+def board_unflatten(board_data):
+    if board_data[0] != MSG_CODES[4]:
+        print("Not a BOARD packet")
+        return None
+    else:
+        #print(board_data[1]) #uncomment to see board string
+        col = board_data[1][0]
+        row = board_data[1][2]
+        board = board_data[1][4:]
 
-    msg = sock.recv(1024)
+        n = 14
+        board = [board[i:i+n] for i in range(0, len(board), n)]
+        print("A B C D E F G")
+        for list in board:
+            print(list)
 
-    return msg.decode()
 
 def main():
-    HOST = input("Welcome to Connecti4n!\nWhat is the server IP address? ")
+    HOST = 'localhost'#input("Welcome to Connecti4n!\nWhat is the server IP address? ")
     PORT = 4414
 
 
@@ -52,7 +92,8 @@ def main():
         start = input("Would you like to start the game? ")
         if (start == 'y'):
             c4n_send_start(sock)
-            print(c4n_get_msg(sock))
+            board_data = c4n_validate(sock.recv(1024))
+            board_unflatten(board_data)
             #TODO uncomment below once we get to the part where I can take in the game logic
             #c4n_send_start(sock)
             #while True:
