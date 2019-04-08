@@ -49,19 +49,17 @@ def c4n_send_start(sock):
 
 
 # Send to server
-def c4n_send_msg(codigo, contenido, sock):
-    #make sure there is a valid code
-    if (codigo not in  MSG_CODES ):
+def c4n_message(code, content):
+    if code not in MSG_CODES:
         return None
-    else:
-        # construct basic message
-        out = 'C4N ' + VERSION + ' ' + codigo
-        # append content if there is anything on the 
-        if (contenido != None):
-            out += '\n' + str(contenido)
-        print(out)
-        #send all generated headers
-        sock.sendall(out.encode())
+
+    out = 'C4N ' + VERSION + ' ' + code
+
+    if content != None:
+        out += '\n' + str(content)
+
+    return out.encode()
+
 
 # Board Data
 def board_unflatten(board_data):
@@ -69,9 +67,6 @@ def board_unflatten(board_data):
         print("Not a BOARD packet")
         return None
     else:
-        #print(board_data[1]) #uncomment to see board string
-        col = board_data[1][0]
-        row = board_data[1][2]
         board = board_data[1][4:]
 
         n = 14
@@ -79,6 +74,21 @@ def board_unflatten(board_data):
         print("A B C D E F G")
         for list in board:
             print(list)
+        return board
+
+def board_flatten(board):
+    out = str(len(board)) +  ' ' + str(len(board[0]))
+    for row in board:
+        for col in row:
+            out += ' ' str(col)
+
+    return out
+
+def update_board(board_list, move):
+
+    return board
+
+
 
 
 def main():
@@ -91,20 +101,19 @@ def main():
         sock.connect((HOST, PORT))
         start = input("Would you like to start the game? ")
         if (start == 'y'):
+            # send start command to server
             c4n_send_start(sock)
-            board_data = c4n_validate(sock.recv(1024))
-            board_unflatten(board_data)
-            #TODO uncomment below once we get to the part where I can take in the game logic
-            #c4n_send_start(sock)
-            #while True:
-             #   message_to_server = input("Test a message ")
-                #as is it will pass in the start command
-                #c4n_send_msg(MSG_CODES[2], message_to_server, sock)
-              #  message_from_server = c4n_get_msg(sock)
-               # print(message_from_server)
+            winner = False #TODO maybe replace this with a detect winner packet from server
+            while winner != True:
+                board_data = c4n_validate(sock.recv(1024)) #get board from server
+                current_board = board_unflatten(board_data) #This is a list
+                move = input("Which is your move? ") #take the move
+                current_board = update_board(current_board, move) #update the board, returning the board as a list
+                sock.sendall(c4n_message('BOARD', current_board)) #send it back
         else:
+            sock.close()
             exit(0)
-    except (KeyboardInterrupt):
+    except KeyboardInterrupt:
         sock.close()
     except ConnectionRefusedError:
          print("The server you are trying to connect to is not found")
