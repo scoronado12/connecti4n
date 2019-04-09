@@ -8,8 +8,9 @@ Each message passed between a client and a server must have at least three
 components, separated by a space. First, `C4N` to signify that this is a
 ConnectI4n message. Next, a version number. Finally, the message type.
 Available message types are determined by the protocol version. Some message
-types may have additional data following the header. The format of this data is
-expected to be known to the client/server.
+types may have additional data following the header, separated by a newline
+character. The format of this data is expected to be known to the
+client/server.
 
 ## Message Types
 
