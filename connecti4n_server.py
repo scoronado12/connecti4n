@@ -22,6 +22,21 @@ def board_flatten(board):
     return out
 
 
+def board_check_victory(board, who):
+    for i, row in enumerate(board):
+        for j, val in enumerate(row):
+            if val == who:
+                dirs = [(-1, 1), (0, 1), (1, 1), (1, 0)] 
+                lines = [[(x * n, y * n) for n in range(1,4)] for x,y in dirs]
+
+                return any(all(0 <= x + i < len(board) and 
+                               0 <= y + j < len(row) and
+                               board[x + i][y + j] == who for x, y in line)
+                           for line in lines)
+    print('what')
+    return False
+
+
 def c4n_validate(data):
     # Decode the data
     lines = data.decode().split('\n')
@@ -94,9 +109,21 @@ def main():
              [ 0, 0, 0, 0, 0, 0, 0 ],
              [ 0, 0, 0, 0, 0, 0, 0 ]]
 
+    # Game loop
+    while true:
+        # TODO
+        # Check for player victory
 
-    # Send board state
-    conn.sendall(c4n_message('BOARD', board_flatten(board)))
+        # TODO
+        # Process AI turn
+
+        # TODO
+        # Check for AI victory
+
+        # TODO if game is over, send result packet, followed by final state
+        # Send board state
+        conn.sendall(c4n_message('BOARD', board_flatten(board)))
+
 
     # Close the client connection
     conn.close()
