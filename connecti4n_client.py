@@ -57,13 +57,13 @@ def c4n_message(code, content):
 
     if content != None:
         out += '\n' + str(content)
-
+    #print(out) # uncomment to see what packet is going out
     return out.encode()
 
 
 # Board Data
 def board_unflatten(board_data):
-    if board_data[0] != MSG_CODES[4]:
+    if board_data[0] != 'BOARD':
         print("Not a BOARD packet")
         return None
     else:
@@ -75,20 +75,6 @@ def board_unflatten(board_data):
         for list in board:
             print(list)
         return board
-
-def board_flatten(board):
-    out = str(len(board)) +  ' ' + str(len(board[0]))
-    for row in board:
-        for col in row:
-            out += ' ' str(col)
-
-    return out
-
-def update_board(board_list, move):
-
-    return board
-
-
 
 
 def main():
@@ -104,12 +90,20 @@ def main():
             # send start command to server
             c4n_send_start(sock)
             winner = False #TODO maybe replace this with a detect winner packet from server
+
             while winner != True:
                 board_data = c4n_validate(sock.recv(1024)) #get board from server
                 current_board = board_unflatten(board_data) #This is a list
                 move = input("Which is your move? ") #take the move
-                current_board = update_board(current_board, move) #update the board, returning the board as a list
-                sock.sendall(c4n_message('BOARD', current_board)) #send it back
+
+                #send Move Packet back
+                sock.sendall(c4n_message('MOVE', move))
+
+                winner = True #break loop while debugging
+
+            # Game exits when exiting from loop
+            sock.close()
+            exit(0)
         else:
             sock.close()
             exit(0)
