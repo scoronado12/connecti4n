@@ -76,6 +76,15 @@ def board_unflatten(board_data):
             print(list)
         return board
 
+def letterInNumOut(moveLetter):
+    number_letter = dict(zip(['A', 'B', 'C', 'D', 'E', 'F', 'G'], [0, 1, 2, 3, 4, 5, 6]))
+    for num in number_letter:
+        numOut = number_letter[moveLetter]
+        #print(numOut)
+        return numOut
+
+    print('Invalid move')
+    return None
 
 def main():
     HOST = 'localhost'#input("Welcome to Connecti4n!\nWhat is the server IP address? ")
@@ -95,8 +104,9 @@ def main():
                 board_data = c4n_validate(sock.recv(1024)) #get board from server
                 current_board = board_unflatten(board_data) #This is a list
                 move = input("Which is your move? ") #take the move
-
+                move = letterInNumOut(move)
                 #send Move Packet back
+
                 sock.sendall(c4n_message('MOVE', move))
 
                 winner = True #break loop while debugging
