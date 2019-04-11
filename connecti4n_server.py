@@ -14,6 +14,10 @@ VERSION = '1.0'
 CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
 
+class MalformedMessageException(Exception):
+    pass
+
+
 def board_flatten(board):
     out = str(len(board)) + ' ' + str(len(board[0]))
     for row in board:
@@ -60,8 +64,8 @@ def c4n_validate(data):
         header[0] != 'C4N' or
         header[1] != VERSION or
         header[2] not in CODES):
-        print('Bad message')
-        raise Exception
+        print('Bad message', data.decode())
+        raise MalformedMessageException
 
     # Read the content if present
     if len(lines) > 1:
@@ -152,7 +156,8 @@ def main():
         while True:
             try:
                 code, content = c4n_validate(conn.recv(1024))
-            except Exception:
+                break
+            except MalformedMessageException:
                 pass
 
         if code == 'MOVE':
