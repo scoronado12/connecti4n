@@ -102,7 +102,7 @@ def move_magic(sock):
     # recieve is valid packet
     validity = c4n_validate(sock.recv(1024))
 
-    if validity != 'ERROR' ,'2':
+    if validity != ('ERROR' ,'2'):
         pass
     else:
         # validity recieves an error packet

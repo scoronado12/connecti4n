@@ -7,6 +7,7 @@
 # received any unauthorized help on this work.
 
 import socket
+import random
 
 
 VERSION = '1.0'
@@ -33,8 +34,18 @@ def board_check_victory(board, who):
                                0 <= y + j < len(row) and
                                board[x + i][y + j] == who for x, y in line)
                            for line in lines)
-    print('what')
     return False
+
+def board_add_token(board, who, where):
+    if board[0][where] != 0:
+        raise IndexError
+    if board[-1][where] == 0:
+        board[-1][where] = who
+        return
+
+    for i, row in enumerate(board):
+        if row[where] != 0:
+            board[i - 1][where] = who
 
 
 def c4n_validate(data):
@@ -49,9 +60,8 @@ def c4n_validate(data):
         header[0] != 'C4N' or
         header[1] != VERSION or
         header[2] not in CODES):
-        # TODO fail
         print('Bad message')
-        return None
+        raise Exception
 
     # Read the content if present
     if len(lines) > 1:
@@ -110,19 +120,43 @@ def main():
              [ 0, 0, 0, 0, 0, 0, 0 ]]
 
     # Game loop
-    while true:
-        # TODO
+    win = None
+    while True:
         # Check for player victory
+        if (board_check_victory(board, 1)):
+            win = 1
 
-        # TODO
         # Process AI turn
+        while True:
+            try:
+                board_add_token(board, 2, random.randrange(7))
+                break
+            except IndexError:
+                pass
 
-        # TODO
+
         # Check for AI victory
+        if (board_check_victory(board, 2)):
+            win = 2
 
-        # TODO if game is over, send result packet, followed by final state
+        if win:
+            conn.sendall(c4n_message('RESULT', win))
+
         # Send board state
         conn.sendall(c4n_message('BOARD', board_flatten(board)))
+
+        #break out if the game is over
+        if win:
+            break
+
+        while True:
+            try:
+                code, content = c4n_validate(conn.recv(1024))
+            except Exception:
+                pass
+
+        if code == 'MOVE':
+            board_add_token(board, 1, int(content))
 
 
     # Close the client connection
