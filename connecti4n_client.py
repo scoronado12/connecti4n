@@ -77,6 +77,40 @@ def board_unflatten(board_data):
         return board
 
 
+## Turns the user's selection into a proper char that the server can read
+def letterInNumOut(moveLetter):
+    number_letter = dict(zip(['A', 'B', 'C', 'D', 'E', 'F', 'G'], [0, 1, 2, 3, 4, 5, 6]))
+    for num in number_letter:
+        numOut = number_letter[moveLetter]
+        #print(numOut)
+        return numOut
+
+    print('Invalid move')
+    return None
+
+def move_magic(sock):
+
+    board_data = c4n_validate(sock.recv(1024)) #get board from server
+    current_board = board_unflatten(board_data) #This is a list
+    move = input("Which is your move? ") #take the move
+    move = letterInNumOut(move)
+
+
+    #send Move Packet back
+
+    sock.sendall(c4n_message('MOVE', move))
+    # recieve is valid packet
+    validity = c4n_validate(sock.recv(1024))
+
+    if validity != 'ERROR' ,'2':
+        pass
+    else:
+        # validity recieves an error packet
+        print("Try again!")
+        move_magic(sock)
+
+
+
 def main():
     HOST = 'localhost'#input("Welcome to Connecti4n!\nWhat is the server IP address? ")
     PORT = 4414
@@ -92,12 +126,8 @@ def main():
             winner = False #TODO maybe replace this with a detect winner packet from server
 
             while winner != True:
-                board_data = c4n_validate(sock.recv(1024)) #get board from server
-                current_board = board_unflatten(board_data) #This is a list
-                move = input("Which is your move? ") #take the move
+                move_magic(sock)
 
-                #send Move Packet back
-                sock.sendall(c4n_message('MOVE', move))
 
                 winner = True #break loop while debugging
 
