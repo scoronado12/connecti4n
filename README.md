@@ -25,7 +25,6 @@ client/server.
 | BOARD        | variable    | server -> client |
 | RESULT       | 1           | server -> client |
 
-
 #### `ERROR`
 
 Error messages can be sent from either the client or the server at any time to
@@ -39,20 +38,17 @@ signifying the error code. Available codes are as follows:
 | 3     | (server -> client only) Server full  |
 | 99    | Unknown error                        |
 
-
 #### `STOP`
 
 The client or the server can cleanly attempt to close the game early using this
 message. A client or server need not respond to this message, and may terminate
 the connection immediately.
 
-
 #### `START`
 
 A client wishing to begin a new game opens a connection and sends this message.
 If the server is full, it will respond with error code 3 and a game will not
 begin. Otherwise the server will respond with the initial board state.
-
 
 #### `MOVE`
 
@@ -63,7 +59,6 @@ where the player has chosen, the server will respond with error code 2. A
 responsible client should however check the validity of the move before sending
 to the server. If the move is valid, the server will respond with two `BOARD`
 messages: one after the player's move, and another after the AI's move.
-
 
 #### `BOARD`
 
