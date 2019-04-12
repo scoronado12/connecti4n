@@ -54,7 +54,7 @@ def c4n_validate(data):
 
     # Extract the header
     header = lines[0].split()
-    
+    print("HEADER", header)
     # Validate length
     if (len(header) != 3 or
         header[0] != 'C4N' or
@@ -99,14 +99,8 @@ def c4n_message(code, content):
 
 # Board Data
 def board_unflatten(board_data):
-    
-    #if board_data[0] != 'BOARD':
-        #print("Not a BOARD packet")
-        #return None
-    #else:
-    print("bd",board_data)
+
     board = board_data [4:]
-    print("b", board)
     board = [board[i:i+14] for i in range(0, len(board), 14)]
     print("A B C D E F G")
     for list in board:
@@ -129,8 +123,8 @@ def move_magic(sock):
     print("AI Turn")
     recieve_packet = sock.recv(1024) #get board/error/result from server
     whatIs_recieve = c4n_validate(recieve_packet)
+    #print(recieve_packet)
     if (whatIs_recieve[0] == 'BOARD'):
-        
         current_board = board_unflatten(whatIs_recieve[1]) #This is a list
         move = input("Which is your move? ") #take the move
 
@@ -139,20 +133,22 @@ def move_magic(sock):
 
         sock.sendall(c4n_message('MOVE', move))
         # recieve is valid packet
-        
 
 
     elif (whatIs_recieve[0] == 'ERROR'):
         print("An Error came in")
         raise KeyboardInterrupt
-    
+
     elif (whatIs_recieve[0] == 'RESULT'):
-        
+
         if whatIs_recieve[1] == '1':
             print("You Win!\nConnect I4n!")
+            sock.close()
+            exit()
         elif whatIs_recieve[1] == '2':
             print("You Lose!\nConnect I4n!")
-
+            sock.close()
+            exit()
 
 
 
