@@ -21,7 +21,8 @@ def main():
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((HOST, PORT))
-        start = input("Would you like to start the game? ")
+        print("Connected to " , HOST)
+        start = input("Would you like to start the game? [y/n] ")
         if (start == 'y'):
             # send start command to server
             c4n_send_start(sock)
@@ -54,7 +55,7 @@ def c4n_validate(data):
 
     # Extract the header
     header = lines[0].split()
-    print("HEADER", header)
+    
     # Validate length
     if (len(header) != 3 or
         header[0] != 'C4N' or
@@ -72,7 +73,7 @@ def c4n_validate(data):
         content = None
 
     # Return results
-    print('Good message!')
+    #print('Good message!')
     return header[2], content
 
 
@@ -136,8 +137,19 @@ def move_magic(sock):
 
 
     elif (whatIs_recieve[0] == 'ERROR'):
-        print("An Error came in")
-        raise KeyboardInterrupt
+        
+        if int(whatIs_recieve[1]) == 2:
+            print("Bad Move")
+            move = input("Which is your move? ") #take the move
+
+            move = letterInNumOut(move)
+            #send Move Packet back
+
+            sock.sendall(c4n_message('MOVE', move))
+            
+        else:
+            print("Unknown Error")
+            raise KeyboardInterrupt
 
     elif (whatIs_recieve[0] == 'RESULT'):
 
