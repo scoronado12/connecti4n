@@ -13,6 +13,10 @@ import threading
 VERSION = '1.0'
 CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
+HOST = 'localhost'
+PORT = 4414
+
+HALT = False
 
 class MalformedMessageException(Exception):
     pass
@@ -108,7 +112,7 @@ def game(conn):
 
     # Game loop
     win = None
-    while True:
+    while not HALT:
         # Check for player victory
         if board_check_victory(board, 1):
             win = 1
@@ -138,21 +142,21 @@ def game(conn):
         while True:
             try:
                 code, content = c4n_validate(conn.recv(1024))
-                break
-            except MalformedMessageException:
-                pass
 
-        if code == 'MOVE':
-            board_add_token(board, 1, int(content))
+                if code == 'MOVE':
+                    board_add_token(board, 1, int(content))
+                    break
+
+            except MalformedMessageException:
+                conn.sendall(c4n_message('ERROR', 1))
+            except IndexError:
+                conn.sendall(c4n_message('ERROR', 2))
 
     # Close the client connection
     conn.close()
 
 
 def main():
-    HOST = 'localhost'
-    PORT = 4414
-
     threads = []
 
     # Create the socket
@@ -177,6 +181,10 @@ def main():
         else:
             conn.sendall(c4n_message('ERROR', 1))
             conn.close()
+
+    HALT = True
+    for thread_curr in threads:
+        thread_curr.join()
 
     # Close the socket
     sock.close()
