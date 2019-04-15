@@ -118,7 +118,7 @@ def game(conn):
             win = 1
 
         # Process AI turn
-        while True:
+        while not HALT:
             try:
                 board_add_token(board, 2, random.randrange(7))
                 break
@@ -139,13 +139,15 @@ def game(conn):
         if win:
             break
 
-        while True:
+        while not HALT:
             try:
                 code, content = c4n_validate(conn.recv(1024))
 
                 if code == 'MOVE':
                     board_add_token(board, 1, int(content))
                     break
+                else:
+                    conn.sendall(c4n_message('ERROR', 1))
 
             except MalformedMessageException:
                 conn.sendall(c4n_message('ERROR', 1))
@@ -173,12 +175,16 @@ def main():
 
         print('New connection from:', addr)
 
-        message = c4n_validate(conn.recv(1024))
-        if message[0] == 'START':
-            gamethread = threading.Thread(target=game, args=[conn])
-            gamethread.start()
-            threads.append(gamethread)
-        else:
+        try:
+            message = c4n_validate(conn.recv(1024))
+            if message[0] == 'START':
+                gamethread = threading.Thread(target=game, args=[conn])
+                gamethread.start()
+                threads.append(gamethread)
+            else:
+                conn.sendall(c4n_message('ERROR', 1))
+                conn.close()
+        except MalformedMessageException:
             conn.sendall(c4n_message('ERROR', 1))
             conn.close()
 
