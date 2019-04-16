@@ -1,7 +1,8 @@
+"""Server for a game of Connect I4n"""
+
 # File:   connecti4n_server.py
 # Author: Ethan Martin & Stefano Coronado
 # Date:   28 March 2019
-# Brief:  Server for a game of Connect I4n
 #
 # We hereby declare on our word of honor that we have neither given nor
 # received any unauthorized help on this work.
@@ -9,20 +10,20 @@
 import socket
 import random
 import threading
+import argparse
 
 VERSION = '1.0'
 CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
-HOST = 'localhost'
-PORT = 4414
-
 HALT = False
 
+
 class MalformedMessageException(Exception):
-    pass
+    """Error for a malformed ConnectI4n message"""
 
 
 def board_flatten(board):
+    """Flattens a 2D array of ints into a string format"""
     out = str(len(board)) + ' ' + str(len(board[0]))
     for row in board:
         for col in row:
@@ -32,6 +33,7 @@ def board_flatten(board):
 
 
 def board_check_victory(board, who):
+    """Checks the given board for 4 tokens of the given type in a row"""
     for i, row in enumerate(board):
         for j, val in enumerate(row):
             if val == who:
@@ -47,6 +49,7 @@ def board_check_victory(board, who):
 
 
 def board_add_token(board, who, where):
+    """Attempts to add a token to the board. Throws an IndexError on failure"""
     if board[0][where] != 0:
         raise IndexError
     if board[-1][where] == 0:
@@ -60,6 +63,11 @@ def board_add_token(board, who, where):
 
 
 def c4n_validate(data):
+    """
+    Validates an incoming C4N message for correctness. Returns the message type
+    and the content of the message (if any) on success, and raises a
+    MalformedMessageError on failure.
+    """
     # Decode the data
     lines = data.decode().split('\n')
 
@@ -69,7 +77,6 @@ def c4n_validate(data):
     # Validate length
     if (len(header) != 3 or header[0] != 'C4N' or header[1] != VERSION
             or header[2] not in CODES):
-        print('Bad message', data.decode())
         raise MalformedMessageException
 
     # Read the content if present
@@ -81,11 +88,11 @@ def c4n_validate(data):
         content = None
 
     # Return results
-    print('Good message!')
     return header[2], content
 
 
 def c4n_message(code, content):
+    """Construct a C4N message using the given code and content."""
     # Make sure that we have a valid code
     if code not in CODES:
         return None
@@ -101,7 +108,8 @@ def c4n_message(code, content):
     return out.encode()
 
 
-def game(conn):
+def game(conn, t_id):
+    """The main game loop, run with the given client connection."""
     # Create game board
     board = [[0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0],
@@ -115,24 +123,32 @@ def game(conn):
     while not HALT:
         # Check for player victory
         if board_check_victory(board, 1):
+            print('[{:04}] Player has won!'.format(t_id))
             win = 1
 
         # Process AI turn
+        print('[{:04}] Placing AI token...'.format(t_id))
         while not HALT:
             try:
                 board_add_token(board, 2, random.randrange(7))
                 break
             except IndexError:
-                pass
+                if all(x != 0 for x in board[0]):
+                    print('[{:04}] Board is full, it\'s a draw!'.format(t_id))
+                    win = -1
+                    break
 
         # Check for AI victory
         if board_check_victory(board, 2):
+            print('[{:04}] AI has won!'.format(t_id))
             win = 2
 
         if win:
+            print('[{:04}] Sending result...'.format(t_id))
             conn.sendall(c4n_message('RESULT', win))
 
         # Send board state
+        print('[{:04}] Sending board state...'.format(t_id))
         conn.sendall(c4n_message('BOARD', board_flatten(board)))
 
         # break out if the game is over
@@ -144,56 +160,89 @@ def game(conn):
                 code, content = c4n_validate(conn.recv(1024))
 
                 if code == 'MOVE':
+                    print('[{:04}] Received player move...'.format(t_id))
                     board_add_token(board, 1, int(content))
                     break
                 else:
-                    conn.sendall(c4n_message('ERROR', 1))
+                    raise MalformedMessageException
 
             except MalformedMessageException:
+                print('[{:04}] Received bad message, waiting for new move...'.format(t_id))
                 conn.sendall(c4n_message('ERROR', 1))
             except IndexError:
+                print('[{:04}] Bad move, waiting for new one...'.format(t_id))
                 conn.sendall(c4n_message('ERROR', 2))
 
     # Close the client connection
+    print('[{:04}] Closing client connection.'.format(t_id))
     conn.close()
 
 
 def main():
-    threads = []
+    """Main thread loop, handles new connections and spawning threads."""
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Runs a Connect I4n server.')
+    parser.add_argument(
+        '-n',
+        '--host',
+        default='localhost',
+        help='the host name/IP address to bind (default: %(default)s)')
+    parser.add_argument(
+        '-p',
+        '--port',
+        default=4414,
+        type=int,
+        help='the port to listen on (default: %(default)s)')
+    args = parser.parse_args()
 
     # Create the socket
+    print('Starting server on {}:{}...'.format(args.host, args.port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     # Bind to the desired address
-    sock.bind((HOST, PORT))
+    sock.bind((args.host, args.port))
 
+    # Set up thread management
+    threads = []
+    t_id = 0
+
+    print('Started! Now listening for clients...')
     while True:
         # Wait for a client
         sock.listen()
         conn, addr = sock.accept()
 
-        print('New connection from:', addr)
+        print('[MAIN] New connection from:', addr)
 
         try:
             message = c4n_validate(conn.recv(1024))
             if message[0] == 'START':
-                gamethread = threading.Thread(target=game, args=[conn])
+                # Start the thread
+                print('[MAIN] Starting new game with id {:04}...'.format(t_id))
+                gamethread = threading.Thread(target=game, args=[conn, t_id])
                 gamethread.start()
+
+                # Keep track of it
                 threads.append(gamethread)
+                t_id = (t_id + 1) % 10000
             else:
-                conn.sendall(c4n_message('ERROR', 1))
-                conn.close()
+                raise MalformedMessageException
         except MalformedMessageException:
+            print('[MAIN] Client sent bad request, closing connection.')
             conn.sendall(c4n_message('ERROR', 1))
             conn.close()
+        except KeyboardInterrupt:
+            print('[MAIN] Received keyboard interrupt, halting...')
+            HALT = True
+            for thread_curr in threads:
+                thread_curr.join()
 
-    HALT = True
-    for thread_curr in threads:
-        thread_curr.join()
+            # Close the socket
+            print('[MAIN] Done. Server is going down!')
+            sock.close()
 
-    # Close the socket
-    sock.close()
+            raise
 
 
 main()
