@@ -14,7 +14,7 @@ MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
 
 def main():
-    HOST = 'localhost'#input("Welcome to Connecti4n!\nWhat is the server IP address? ")
+    HOST = input("Welcome to Connecti4n!\nWhat is the server IP address? ")
     PORT = 4414
 
 
@@ -24,6 +24,7 @@ def main():
         print("Connected to " , HOST)
         start = input("Would you like to start the game? [y/n] ")
         if (start == 'y'):
+            print("Splended! You are Token 1, server is token 2")
             # send start command to server
             c4n_send_start(sock)
             #winner = False #TODO maybe replace this with a detect winner packet from server
@@ -127,7 +128,7 @@ def move_magic(sock):
     #print(recieve_packet)
     if (whatIs_recieve[0] == 'BOARD'):
         current_board = board_unflatten(whatIs_recieve[1]) #This is a list
-        move = input("Which is your move? ") #take the move
+        move = input("Which is your move? (Enter A-F) ") #take the move
 
         move = letterInNumOut(move)
         #send Move Packet back
