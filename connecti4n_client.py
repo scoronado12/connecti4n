@@ -14,7 +14,7 @@ MSG_CODES = ['ERROR', 'STOP', 'START', 'MOVE', 'BOARD', 'RESULT']
 
 
 def main():
-    HOST = input("Welcome to Connecti4n!\nWhat is the server IP address? ")
+    HOST = input("Welcome to Connect I4n!\nWhat is the server IP address? ")
     PORT = 4414
 
 
