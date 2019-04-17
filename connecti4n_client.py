@@ -24,7 +24,7 @@ def main():
         print("Connected to " , HOST)
         start = input("Would you like to start the game? [y/n] ")
         if (start == 'y'):
-            print("Splended! You are Token 1, server is token 2")
+            print("You are Token 1, server is token 2")
             # send start command to server
             c4n_send_start(sock)
             #winner = False #TODO maybe replace this with a detect winner packet from server
