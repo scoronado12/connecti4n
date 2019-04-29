@@ -1,6 +1,12 @@
 # ConnectI4n
 
-A simple Connect 4 server and client for CPSC 414.
+A simple Connect 4 server and client for CPSC 414. 
+
+# Credits
+
+Ethan Martin for the Server
+
+Stefano Coronado for the client
 
 # Protocol
 
