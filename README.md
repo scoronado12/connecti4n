@@ -1,6 +1,11 @@
 # ConnectI4n
 
-A simple Connect 4 server and client for CPSC 414. 
+A simple Connect 4 server and client for our Network Principles course.
+
+# Usage
+
+On a second computer or all on localhost, run the server using any any installation of python 3 that includes the standard libraries.
+Then you can run the client and give the IP address of the server, then you start playing.
 
 # Credits
 
